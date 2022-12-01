@@ -80,25 +80,41 @@ public class Board {
         return false;
     }
 
-    private boolean isPossibleStep(Cell cell, Disk disk) {
-        ArrayList<Cell> horizontalRow = board.get(cell.getPositionY());
-        int horizontalIndex = cell.getPositionX();
+    private ArrayList<Cell> getHorizontalRow(int index) {
+        return board.get(index);
+    }
 
+    private ArrayList<Cell> getVerticalRow(int index) {
         ArrayList<Cell> verticalRow = new ArrayList<>();
-        int verticalIndex = cell.getPositionY();
         for (int i = 0; i < size; ++i) {
-            verticalRow.add(getCell(cell.getPositionX(), i));
+            verticalRow.add(getCell(index, i));
         }
 
+        return verticalRow;
+    }
+
+    private ArrayList<Cell> getDiagonalRow(int startX, int startY) {
         ArrayList<Cell> diagonalRow = new ArrayList<>();
-        int diagonalIndex = Math.min(cell.getPositionX(), cell.getPositionY());
-        int startX = cell.getPositionX() < cell.getPositionY() ? 0 : cell.getPositionX() - cell.getPositionY();
-        int startY = cell.getPositionY() < cell.getPositionX() ? 0 : cell.getPositionY() - cell.getPositionX();
         while (startY < size && startX < size) {
             diagonalRow.add(getCell(startX, startY));
             ++startX;
             ++startY;
         }
+
+        return diagonalRow;
+    }
+    private boolean isPossibleStep(Cell cell, Disk disk) {
+        ArrayList<Cell> horizontalRow = getHorizontalRow(cell.getPositionY());
+        int horizontalIndex = cell.getPositionX();
+
+        ArrayList<Cell> verticalRow = getVerticalRow(cell.getPositionX());
+        int verticalIndex = cell.getPositionY();
+
+        int diagonalIndex = Math.min(cell.getPositionX(), cell.getPositionY());
+        int startX = cell.getPositionX() < cell.getPositionY() ? 0 : cell.getPositionX() - cell.getPositionY();
+        int startY = cell.getPositionY() < cell.getPositionX() ? 0 : cell.getPositionY() - cell.getPositionX();
+        ArrayList<Cell> diagonalRow = getDiagonalRow(startX, startY);
+
 
         return checkRow(horizontalRow, horizontalIndex, disk)
                 || checkRow(verticalRow, verticalIndex, disk)
@@ -126,45 +142,49 @@ public class Board {
         return available;
     }
 
-    public void update() {
-        for (int i = 0; i < size; ++i) {
-            Disk disk = Disk.None;
-            ArrayList<Cell> streak = new ArrayList<>();
-            for (int j = 0; j < size; ++j) {
-                var currentDisk = getCell(j, i).getDisk();
-                if (currentDisk == Disk.None && disk == Disk.None) {
-                    continue;
-                } else if (currentDisk == Disk.None) {
-                    disk = Disk.None;
-                    streak.clear();
-                }
-
-                if (disk == Disk.None) {
-                    disk = currentDisk;
-                } else if (currentDisk != disk) {
-                    streak.add(getCell(j, i));
-                } else {
-                    for (var cell : streak) {
-                        cell.setDisk(disk);
-                    }
-                    streak.clear();
-                    disk = Disk.None;
-                }
+    // TODO: Перепроверить
+    private void updateRow(ArrayList<Cell> row, Disk last) {
+        ArrayList<Cell> streak = new ArrayList<>();
+        boolean isStreak = false;
+        for (Cell value : row) {
+            var currentDisk = value.getDisk();
+            if (currentDisk == Disk.None && !isStreak) {
+                continue;
+            } else if (currentDisk == Disk.None) {
+                streak.clear();
+                isStreak = false;
             }
+
+            if (currentDisk == last && !isStreak) {
+                isStreak = true;
+            } else if (currentDisk != last && isStreak) {
+                streak.add(value);
+            } else {
+                for (var cell : streak) {
+                    cell.setDisk(last);
+                }
+                streak.clear();
+                isStreak = false;
+            }
+        }
+    }
+
+    public void update(Disk last) {
+        for (int i = 0; i < size; ++i) {
+            updateRow(getHorizontalRow(i), last);
+            updateRow(getVerticalRow(i), last);
+            updateRow(getDiagonalRow(0, i), last);
+            updateRow(getDiagonalRow(i, 0), last);
         }
     }
 
     @Override
     public String toString() {
         var out = new StringBuilder();
-        out.append("    ");
-        for (int i = 0; i < size; ++i) {
-            out.append((char) ('a' + i)).append("   ");
-        }
-        out.append('\n').append("  ");
+        out.append("  ");
         out.append("|").append("-".repeat(Math.max(0, size * 4 - 1))).append("|\n");
         for (int i = 0; i < size; ++i) {
-            out.append(i + 1).append(" ").append('|');
+            out.append(size - i).append(" ").append('|');
             for (int j = 0; j < size; ++j) {
                 switch (getCell(j, i).getDisk()) {
                     case White -> out.append(" W ");
@@ -178,6 +198,11 @@ public class Board {
             out.append('\n').append("  ");
             out.append("|").append("-".repeat(size * 4 - 1)).append("|\n");
         }
+        out.append("    ");
+        for (int i = 0; i < size; ++i) {
+            out.append((char) ('a' + i)).append("   ");
+        }
+        out.append('\n');
 
         return out.toString();
     }

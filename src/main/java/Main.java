@@ -7,15 +7,19 @@ public class Main {
         Player currentPlayer = player1;
 
         var res = board.getAvailableSteps(Disk.Black);
-        res.get(1).setDisk(Disk.Black);
-        board.update();
+        res.get(0).setDisk(Disk.Black);
+        board.update(Disk.Black);
+
+        System.out.println(board);
+
 
         res = board.getAvailableSteps(Disk.White);
-//        res.get(4).setDisk(Disk.White);
+        res.get(0).setDisk(Disk.White);
+        board.update(Disk.White);
 
-//        res = board.getAvailableSteps(Disk.Black);
+        res = board.getAvailableSteps(Disk.Black);
         for (var cell : res) {
-            cell.setDisk(Disk.PossibleWhite);
+            cell.setDisk(Disk.PossibleBlack);
         }
 
         System.out.println(board);
