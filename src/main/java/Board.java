@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Stack;
 import java.util.function.Function;
 
@@ -6,6 +7,8 @@ public class Board {
     private ArrayList<ArrayList<Cell>> board;
     private Stack<BoardSnapshot> stepsHistory = new Stack<>();
     private final int size;
+    private boolean isPossibleStepsDisplay = false;
+    private Disk diskWithDisplayedSteps = Disk.None;
 
     public Board(int size) {
         board = new ArrayList<>();
@@ -19,7 +22,7 @@ public class Board {
         }
     }
 
-    void initializeBoard() {
+    void initialize() {
         getCell(size / 2, size / 2).setDisk(Disk.White);
         getCell(size / 2, size / 2 - 1).setDisk(Disk.Black);
         getCell(size / 2 - 1, size / 2).setDisk(Disk.Black);
@@ -33,6 +36,7 @@ public class Board {
     public void makeStep(int x, int y, Disk disk) {
         makeSnapshot();
         getCell(x, y).setDisk(disk);
+        update(getCell(x, y), disk);
     }
 
     private void makeSnapshot() {
@@ -51,12 +55,12 @@ public class Board {
         return board.get(y).get(x);
     }
 
-    private boolean checkRow(ArrayList<Cell> row, int diskPosition, Disk disk) {
+    private int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, Disk disk) {
         int position = diskPosition - 1;
         while (position >= 0) {
             Disk disk1 = row.get(position).getDisk();
             if (disk == disk1 && diskPosition - position > 1) {
-                return true;
+                return position;
             } else if (disk1 == Disk.None || (disk == disk1 && diskPosition - position <= 1)) {
                 break;
             } else {
@@ -69,7 +73,7 @@ public class Board {
         while (position < rowSize) {
             Disk disk1 = row.get(position).getDisk();
             if (disk == disk1 && position - diskPosition > 1) {
-                return true;
+                return position;
             } else if (disk1 == Disk.None || (disk == disk1 && position - diskPosition <= 1)) {
                 break;
             } else {
@@ -77,7 +81,7 @@ public class Board {
             }
         }
 
-        return false;
+        return -1;
     }
 
     private ArrayList<Cell> getHorizontalRow(int index) {
@@ -93,16 +97,62 @@ public class Board {
         return verticalRow;
     }
 
-    private ArrayList<Cell> getDiagonalRow(int startX, int startY) {
+    private ArrayList<Cell> getDiagonalRow(int x, int y) {
         ArrayList<Cell> diagonalRow = new ArrayList<>();
-        while (startY < size && startX < size) {
+        int startX = x - 1;
+        int startY = y - 1;
+        while (startY < size && startX < size && startX >= 0 && startY >= 0) {
+            diagonalRow.add(getCell(startX, startY));
+            --startX;
+            --startY;
+        }
+
+        startX = x;
+        startY = y;
+        while (startY < size && startX < size && startX >= 0 && startY >= 0) {
             diagonalRow.add(getCell(startX, startY));
             ++startX;
             ++startY;
         }
 
+        diagonalRow.sort(Comparator.comparingInt(Cell::getPositionY));
         return diagonalRow;
     }
+
+    private ArrayList<Cell> getSideDiagonalRow(int x, int y) {
+        int startX = x;
+        int startY = y;
+        ArrayList<Cell> diagonalRow = new ArrayList<>();
+        while (startY < size && startX < size && startX >= 0 && startY >= 0) {
+            diagonalRow.add(getCell(startX, startY));
+            ++startX;
+            --startY;
+        }
+
+        startX = x - 1;
+        startY = y + 1;
+        while (startY < size && startX < size && startX >= 0 && startY >= 0) {
+            diagonalRow.add(getCell(startX, startY));
+            --startX;
+            ++startY;
+        }
+
+        diagonalRow.sort(Comparator.comparingInt(Cell::getPositionY));
+        return diagonalRow;
+    }
+
+    private int getIndexInRow(ArrayList<Cell> row, Cell cell) {
+        int i = 0;
+        for (Cell cell1: row) {
+            if (cell1.getPositionX() == cell.getPositionX() && cell1.getPositionY() == cell.getPositionY()) {
+                return i;
+            }
+            ++i;
+        }
+
+        return -1;
+    }
+
     private boolean isPossibleStep(Cell cell, Disk disk) {
         ArrayList<Cell> horizontalRow = getHorizontalRow(cell.getPositionY());
         int horizontalIndex = cell.getPositionX();
@@ -110,15 +160,16 @@ public class Board {
         ArrayList<Cell> verticalRow = getVerticalRow(cell.getPositionX());
         int verticalIndex = cell.getPositionY();
 
-        int diagonalIndex = Math.min(cell.getPositionX(), cell.getPositionY());
-        int startX = cell.getPositionX() < cell.getPositionY() ? 0 : cell.getPositionX() - cell.getPositionY();
-        int startY = cell.getPositionY() < cell.getPositionX() ? 0 : cell.getPositionY() - cell.getPositionX();
-        ArrayList<Cell> diagonalRow = getDiagonalRow(startX, startY);
+        ArrayList<Cell> diagonalRow = getDiagonalRow(cell.getPositionX(), cell.getPositionY());
+        int diagonalIndex = getIndexInRow(diagonalRow, cell);
 
+        ArrayList<Cell> sideDiagonalRow = getSideDiagonalRow(cell.getPositionX(), cell.getPositionY());
+        int sideDiagonalIndex = getIndexInRow(sideDiagonalRow, cell);
 
-        return checkRow(horizontalRow, horizontalIndex, disk)
-                || checkRow(verticalRow, verticalIndex, disk)
-                || checkRow(diagonalRow, diagonalIndex, disk);
+        return getClosingCellIndex(horizontalRow, horizontalIndex, disk) != -1
+                || getClosingCellIndex(verticalRow, verticalIndex, disk) != -1
+                || getClosingCellIndex(diagonalRow, diagonalIndex, disk) != -1
+                || getClosingCellIndex(sideDiagonalRow, sideDiagonalIndex, disk) != -1;
     }
 
     public ArrayList<Cell> getAvailableSteps(Disk disk) {
@@ -142,56 +193,52 @@ public class Board {
         return available;
     }
 
-    // TODO: Перепроверить
-    private void updateRow(ArrayList<Cell> row, Disk last) {
-        ArrayList<Cell> streak = new ArrayList<>();
-        boolean isStreak = false;
-        for (Cell value : row) {
-            var currentDisk = value.getDisk();
-            if (currentDisk == Disk.None && !isStreak) {
-                continue;
-            } else if (currentDisk == Disk.None) {
-                streak.clear();
-                isStreak = false;
-            }
+    private void updateRow(ArrayList<Cell> row, int diskPosition, Disk last) {
+        int closingCellIndex = getClosingCellIndex(row, diskPosition, last);
+        if (closingCellIndex < 0) {
+            return;
+        }
 
-            if (currentDisk == last && !isStreak) {
-                isStreak = true;
-            } else if (currentDisk != last && isStreak) {
-                streak.add(value);
-            } else {
-                for (var cell : streak) {
-                    cell.setDisk(last);
-                }
-                streak.clear();
-                isStreak = false;
-            }
+        int from = Math.min(diskPosition, closingCellIndex);
+        int to = Math.max(diskPosition, closingCellIndex);
+        int i = from + 1;
+        while (i != to) {
+            row.get(i).setDisk(last);
+            ++i;
         }
     }
 
-    public void update(Disk last) {
-        for (int i = 0; i < size; ++i) {
-            updateRow(getHorizontalRow(i), last);
-            updateRow(getVerticalRow(i), last);
-            updateRow(getDiagonalRow(0, i), last);
-            updateRow(getDiagonalRow(i, 0), last);
-        }
+    private void update(Cell cell, Disk last) {
+        updateRow(getHorizontalRow(cell.getPositionY()), cell.getPositionX(), last);
+        updateRow(getVerticalRow(cell.getPositionX()), cell.getPositionY(), last);
+        var diagonalRow = getDiagonalRow(cell.getPositionX(), cell.getPositionY());
+        updateRow(diagonalRow, getIndexInRow(diagonalRow, cell), last);
+        var sideDiagonalRow = getSideDiagonalRow(cell.getPositionX(), cell.getPositionY());
+        updateRow(sideDiagonalRow, getIndexInRow(sideDiagonalRow, cell), last);
+    }
+
+    public void displayPossibleSteps(boolean value, Disk disk) {
+        isPossibleStepsDisplay = value;
+        diskWithDisplayedSteps = disk;
     }
 
     @Override
     public String toString() {
+        var possibleSteps = getAvailableSteps(diskWithDisplayedSteps);
         var out = new StringBuilder();
         out.append("  ");
         out.append("|").append("-".repeat(Math.max(0, size * 4 - 1))).append("|\n");
         for (int i = 0; i < size; ++i) {
             out.append(size - i).append(" ").append('|');
             for (int j = 0; j < size; ++j) {
-                switch (getCell(j, i).getDisk()) {
-                    case White -> out.append(" W ");
-                    case PossibleWhite -> out.append(" ŵ ");
-                    case PossibleBlack -> out.append(" Ḇ ");
-                    case Black -> out.append(" B ");
-                    case None -> out.append("   ");
+                if (isPossibleStepsDisplay && possibleSteps.contains(getCell(j, i))) {
+                    out.append(" @ ");
+                } else {
+                    switch (getCell(j, i).getDisk()) {
+                        case White -> out.append(" W ");
+                        case Black -> out.append(" B ");
+                        case None -> out.append("   ");
+                    }
                 }
                 out.append('|');
             }

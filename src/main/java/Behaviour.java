@@ -1,3 +1,3 @@
 public interface Behaviour {
-    void makeStep(Board board);
+    Decision makeDecision(Board board, Disk disk);
 }

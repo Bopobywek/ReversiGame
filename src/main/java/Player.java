@@ -8,11 +8,14 @@ public class Player {
     }
 
     void makeStep(Board board) {
-        behaviour.makeStep(board);
+        Decision decision = behaviour.makeDecision(board, disk);
+        if (decision.action == Action.Step) {
+            board.makeStep(decision.coordinateX, decision.coordinateY, disk);
+        }
     }
 
     public boolean isBot() {
-        return !(behaviour instanceof Human);
+        return !(behaviour instanceof HumanBehaviour);
     }
 
     public Disk getDisk() {
