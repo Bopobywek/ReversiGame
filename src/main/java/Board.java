@@ -55,7 +55,7 @@ public class Board {
         return board.get(y).get(x);
     }
 
-    private int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, Disk disk) {
+    public int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, Disk disk) {
         int position = diskPosition - 1;
         while (position >= 0) {
             Disk disk1 = row.get(position).getDisk();
@@ -84,11 +84,11 @@ public class Board {
         return -1;
     }
 
-    private ArrayList<Cell> getHorizontalRow(int index) {
+    public ArrayList<Cell> getHorizontalRow(int index) {
         return board.get(index);
     }
 
-    private ArrayList<Cell> getVerticalRow(int index) {
+    public ArrayList<Cell> getVerticalRow(int index) {
         ArrayList<Cell> verticalRow = new ArrayList<>();
         for (int i = 0; i < size; ++i) {
             verticalRow.add(getCell(index, i));
@@ -97,7 +97,7 @@ public class Board {
         return verticalRow;
     }
 
-    private ArrayList<Cell> getDiagonalRow(int x, int y) {
+    public ArrayList<Cell> getDiagonalRow(int x, int y) {
         ArrayList<Cell> diagonalRow = new ArrayList<>();
         int startX = x - 1;
         int startY = y - 1;
@@ -119,7 +119,7 @@ public class Board {
         return diagonalRow;
     }
 
-    private ArrayList<Cell> getSideDiagonalRow(int x, int y) {
+    public ArrayList<Cell> getSideDiagonalRow(int x, int y) {
         int startX = x;
         int startY = y;
         ArrayList<Cell> diagonalRow = new ArrayList<>();
@@ -141,7 +141,47 @@ public class Board {
         return diagonalRow;
     }
 
-    private int getIndexInRow(ArrayList<Cell> row, Cell cell) {
+    public ArrayList<Cell> getClosedCells(Cell cell, Disk disk) {
+        ArrayList<Cell> closedCells = new ArrayList<>();
+        ArrayList<Cell> horizontalRow = getHorizontalRow(cell.getPositionY());
+        int horizontalIndex = cell.getPositionX();
+
+        ArrayList<Cell> verticalRow = getVerticalRow(cell.getPositionX());
+        int verticalIndex = cell.getPositionY();
+
+        ArrayList<Cell> diagonalRow = getDiagonalRow(cell.getPositionX(), cell.getPositionY());
+        int diagonalIndex = getIndexInRow(diagonalRow, cell);
+
+        ArrayList<Cell> sideDiagonalRow = getSideDiagonalRow(cell.getPositionX(), cell.getPositionY());
+        int sideDiagonalIndex = getIndexInRow(sideDiagonalRow, cell);
+
+        closedCells.addAll(getClosedCellsInRow(horizontalRow, horizontalIndex, disk));
+        closedCells.addAll(getClosedCellsInRow(verticalRow, verticalIndex, disk));
+        closedCells.addAll(getClosedCellsInRow(diagonalRow, diagonalIndex, disk));
+        closedCells.addAll(getClosedCellsInRow(sideDiagonalRow, sideDiagonalIndex, disk));
+
+
+        return closedCells;
+    }
+
+    private ArrayList<Cell> getClosedCellsInRow(ArrayList<Cell> row, int index, Disk disk) {
+        ArrayList<Cell> closedCells = new ArrayList<>();
+        int closingCellIndex = getClosingCellIndex(row, index, disk);
+        if (closingCellIndex < 0) {
+            return closedCells;
+        }
+        int from = Math.min(index, closingCellIndex);
+        int to = Math.max(index, closingCellIndex);
+        int i = from + 1;
+        while (i != to) {
+            closedCells.add(row.get(i));
+            ++i;
+        }
+
+        return closedCells;
+    }
+
+    public int getIndexInRow(ArrayList<Cell> row, Cell cell) {
         int i = 0;
         for (Cell cell1: row) {
             if (cell1.getPositionX() == cell.getPositionX() && cell1.getPositionY() == cell.getPositionY()) {

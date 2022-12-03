@@ -2,8 +2,8 @@ public class Main {
     public static void main(String[] args) {
         Board board = new Board(8);
         board.initialize();
-        Player player1 = new Player(new HumanBehaviour(), Disk.Black);
-        Player player2 = new Player(new HumanBehaviour(), Disk.White);
+        Player player1 = new Player(new EasyBotBehaviour(), Disk.Black);
+        Player player2 = new Player(new EasyBotBehaviour(), Disk.White);
         Player currentPlayer = player1;
 
         while (!isGameFinished(board)) {
@@ -18,6 +18,8 @@ public class Main {
                 currentPlayer = player1;
             }
         }
+
+        System.out.println("GAME OVER");
     }
 
     public static boolean isGameFinished(Board board) {
