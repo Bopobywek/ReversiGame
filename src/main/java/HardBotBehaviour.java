@@ -1,6 +1,16 @@
 import java.util.Hashtable;
 
+/**
+ * Класс, описывающий поведения бота уровня профессионала.
+ */
 public class HardBotBehaviour extends EasyBotBehaviour implements Behaviour {
+    /**
+     * Метод для принятия решения о следующем ходе для бота уровня профессионала.
+     * @param board доска, на которой проходит игра.
+     * @param diskColor цвет фишки, которой нужно совершить ход.
+     * @return объект-решение, которое было принято.
+     * @see Decision объект-решение
+     */
     @Override
     public Decision makeDecision(Board board, DiskColor diskColor) {
         Board boardCopy = board.getBoardCopy();

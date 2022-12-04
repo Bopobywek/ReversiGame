@@ -2,8 +2,17 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+/**
+ * Класс, который описывает поведение человека.
+ */
 public class HumanBehaviour implements Behaviour {
-
+    /**
+     * Метод для принятия решения о следующем ходе для пользователя.
+     * @param board доска, на которой проходит игра.
+     * @param diskColor цвет фишки, которой нужно совершить ход.
+     * @return объект-решение, которое было принято.
+     * @see Decision объект-решение
+     */
     @Override
     public Decision makeDecision(Board board, DiskColor diskColor) {
         var possibleSteps = board.getAvailableSteps(diskColor);
@@ -28,6 +37,7 @@ public class HumanBehaviour implements Behaviour {
             String input;
             Scanner scanner = new Scanner(System.in);
 
+            // Запрашиваем ввод следующего шага.
             String pattern = board.isRestoreAllowed() ? "(?:[Rr]|[1-9][A-Ha-h])" : "[1-9][A-Ha-h]";
             try {
                 input = scanner.next(pattern).toLowerCase();
@@ -43,8 +53,11 @@ public class HumanBehaviour implements Behaviour {
                 return new Decision(Action.UNDO);
             }
 
+            // Переводим кооридинаты из символьного представления в числовое.
             x = input.charAt(1) - 97;
             y = 8 - (input.charAt(0) - 48);
+
+            // Проверяем, можно ли поставить фишку на указанную клетку.
             for (var cell : possibleSteps) {
                 if (cell.getPositionX() == x && cell.getPositionY() == y) {
                     isCorrectStep = true;
@@ -60,6 +73,10 @@ public class HumanBehaviour implements Behaviour {
         return new Decision(Action.STEP, x, y);
     }
 
+    /**
+     * Метод, который печатает возможные ходы.
+     * @param steps возможные ходы.
+     */
     private void printAvailableSteps(ArrayList<Cell> steps) {
         StringBuilder sb = new StringBuilder("Possible steps: ");
         ArrayList<String> representations = new ArrayList<>();

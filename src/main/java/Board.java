@@ -2,12 +2,18 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Stack;
 
+/**
+ * Класс, представляющий доску для игры.
+ */
 public class Board {
     private ArrayList<ArrayList<Cell>> board;
+    /**
+     * Поле для хранения истории ходов.
+     * @see BoardSnapshot
+     */
     private Stack<BoardSnapshot> stepsHistory = new Stack<>();
     private final int size;
     private boolean isPossibleStepsDisplay = false;
-    public final int displaySize;
 
     public boolean isRestoreAllowed() {
         return isStepBackAllowed;
@@ -20,11 +26,15 @@ public class Board {
     private boolean isStepBackAllowed;
     private DiskColor diskColorWithDisplayedSteps = DiskColor.NONE;
 
+    /**
+     * Конструирует новую квадратную доску.
+     * @param size размер доски.
+     * @param isStepBackAllowed разрешено ли возвращаться к предыдущим ходам.
+     */
     public Board(int size, boolean isStepBackAllowed) {
         this.isStepBackAllowed = isStepBackAllowed;
         board = new ArrayList<>();
         this.size = size;
-        displaySize = size * 4 - 1;
         for (int i = 0; i < size; ++i) {
             ArrayList<Cell> row = new ArrayList<>(size);
             for (int j = 0; j < size; ++j) {
@@ -34,6 +44,9 @@ public class Board {
         }
     }
 
+    /**
+     * Инициализирует доску, устанавливая на неё фишки в соответствии с правилами игры.
+     */
     public void initialize() {
         getCell(size / 2, size / 2).setDisk(DiskColor.WHITE);
         getCell(size / 2, size / 2 - 1).setDisk(DiskColor.BLACK);
@@ -41,16 +54,29 @@ public class Board {
         getCell(size / 2 - 1, size / 2 - 1).setDisk(DiskColor.WHITE);
     }
 
+    /**
+     * Возвращает размер доски.
+     * @return размер доски.
+     */
     public int getSize() {
         return size;
     }
 
+    /**
+     * Устанавливает фишку в клетку с указанными координатами.
+     * @param x координата по оси x.
+     * @param y координата по оси y.
+     * @param diskColor цвет фишки.
+     */
     public void makeStep(int x, int y, DiskColor diskColor) {
         makeSnapshot();
         getCell(x, y).setDisk(diskColor);
         update(getCell(x, y), diskColor);
     }
 
+    /**
+     * Сохраняет снимок доски.
+     */
     private void makeSnapshot() {
         ArrayList<ArrayList<Cell>> snapshot = new ArrayList<>();
         for (int i = 0; i < size; ++i) {
@@ -63,10 +89,23 @@ public class Board {
         stepsHistory.add(new BoardSnapshot(snapshot));
     }
 
+    /**
+     * Возвращает клетку по заданным координатам.
+     * @param x координата по оси x.
+     * @param y координата по оси y.
+     * @return клетка по заданным координатам.
+     */
     public Cell getCell(int x, int y) {
         return board.get(y).get(x);
     }
 
+    /**
+     * Возвращает позицию замыкающей клетки относитльно ряда или {@code -1}, если клетка не была найдена.
+     * @param row ряд, в котором нужно найти замыкающую клетку.
+     * @param diskPosition позиция клетки с поставленной фишкой.
+     * @param diskColor цвет фишки.
+     * @return позиция замыкающей клетки относитльно ряда или {@code -1}, если клетка не была найдена.
+     */
     private int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, DiskColor diskColor) {
         int position = diskPosition - 1;
         while (position >= 0) {
@@ -96,10 +135,20 @@ public class Board {
         return -1;
     }
 
+    /**
+     * Возвращает горизонтальный ряд доски по индексу.
+     * @param index индекс ряда.
+     * @return ряд с клетками.
+     */
     private ArrayList<Cell> getHorizontalRow(int index) {
         return board.get(index);
     }
 
+    /**
+     * Возвращает вертикальный ряд доски по индексу.
+     * @param index индекс ряда.
+     * @return ряд с клетками.
+     */
     private ArrayList<Cell> getVerticalRow(int index) {
         ArrayList<Cell> verticalRow = new ArrayList<>();
         for (int i = 0; i < size; ++i) {
@@ -110,7 +159,7 @@ public class Board {
     }
 
     /**
-     *
+     * Восстанавливает доску к состоянию на шаг назад.
      */
     public void restorePreviousStep() {
         if (!isStepBackAllowed || stepsHistory.isEmpty()) {
@@ -125,6 +174,12 @@ public class Board {
         }
     }
 
+    /**
+     * Составляет ряд из клеток на диагонали по координатам одной клетки.
+     * @param x координата по оси x.
+     * @param y координата по оси y.
+     * @return ряд из клеток на диагонали.
+     */
     private ArrayList<Cell> getDiagonalRow(int x, int y) {
         ArrayList<Cell> diagonalRow = new ArrayList<>();
         int startX = x - 1;
@@ -147,6 +202,12 @@ public class Board {
         return diagonalRow;
     }
 
+    /**
+     * Составляет ряд из клеток на побочной диагонали по координатам одной клетки.
+     * @param x координата по оси x.
+     * @param y координата по оси y.
+     * @return ряд из клеток на побочной диагонали.
+     */
     private ArrayList<Cell> getSideDiagonalRow(int x, int y) {
         int startX = x;
         int startY = y;
@@ -169,6 +230,12 @@ public class Board {
         return diagonalRow;
     }
 
+    /**
+     * Возвращает клетки, которые замкнуты клеткой с некоторой фишкой.
+     * @param cell замыкающая с одной стороны клетка.
+     * @param diskColor цвет фишки.
+     * @return клетки, которые замкнуты клеткой с фишкой заданного цвета.
+     */
     public ArrayList<Cell> getClosedCells(Cell cell, DiskColor diskColor) {
         ArrayList<Cell> closedCells = new ArrayList<>();
         ArrayList<Cell> horizontalRow = getHorizontalRow(cell.getPositionY());
@@ -192,6 +259,13 @@ public class Board {
         return closedCells;
     }
 
+    /**
+     * Возвращает замкнутые клтеки в некотором ряду.
+     * @param row ряд,в котором нужно найти замкнутые клетки.
+     * @param index позиция клетки, которая с одной стороны замыкает другие клетки.
+     * @param diskColor цвет фишки, в клеткии на позции {@code index}
+     * @return замкнутые клтеки в некотором ряду
+     */
     private ArrayList<Cell> getClosedCellsInRow(ArrayList<Cell> row, int index, DiskColor diskColor) {
         ArrayList<Cell> closedCells = new ArrayList<>();
         int closingCellIndex = getClosingCellIndex(row, index, diskColor);
@@ -209,6 +283,12 @@ public class Board {
         return closedCells;
     }
 
+    /**
+     * Возвращает индекс клетки в некотором ряду клеток.
+     * @param row ряд клеток.
+     * @param cell клетка, индекс которой нужно найти.
+     * @return позиция клетки или {@code -1}, если клетка не была найдена.
+     */
     private int getIndexInRow(ArrayList<Cell> row, Cell cell) {
         int i = 0;
         for (Cell cell1: row) {
@@ -240,6 +320,11 @@ public class Board {
                 || getClosingCellIndex(sideDiagonalRow, sideDiagonalIndex, diskColor) != -1;
     }
 
+    /**
+     * Возвращает возможные ходы для фишки, заданного цвета.
+     * @param diskColor цвет фишки.
+     * @return набор клеток, доступных для хода.
+     */
     public ArrayList<Cell> getAvailableSteps(DiskColor diskColor) {
         ArrayList<Cell> available = new ArrayList<>();
         if (diskColor == DiskColor.NONE) {
@@ -261,6 +346,12 @@ public class Board {
         return available;
     }
 
+    /**
+     * Переворачивает фишки в ряду.
+     * @param row ряд с клетками.
+     * @param diskPosition позиция клетки с фишкой, относительно переданного ряда.
+     * @param last фишка, которую поставили в клетку.
+     */
     private void updateRow(ArrayList<Cell> row, int diskPosition, DiskColor last) {
         int closingCellIndex = getClosingCellIndex(row, diskPosition, last);
         if (closingCellIndex < 0) {
@@ -276,6 +367,11 @@ public class Board {
         }
     }
 
+    /**
+     * Переворачивает фишки после хода в соответствии с правилами игры.
+     * @param cell клетка, в которую был сделан ход.
+     * @param last фишка, которую поставили в клетку.
+     */
     private void update(Cell cell, DiskColor last) {
         updateRow(getHorizontalRow(cell.getPositionY()), cell.getPositionX(), last);
         updateRow(getVerticalRow(cell.getPositionX()), cell.getPositionY(), last);
@@ -285,11 +381,22 @@ public class Board {
         updateRow(sideDiagonalRow, getIndexInRow(sideDiagonalRow, cell), last);
     }
 
+    /**
+     * Устанавливает значение для поля, которое хранит информацию о том,
+     * должны ли отображаться возможные варианты ходов.
+     * @param value значение типа {@code boolean}
+     * @param diskColor цвет фишки, для которой нужно отображать/не отображать доступные ходы.
+     */
     public void setDisplayPossibleSteps(boolean value, DiskColor diskColor) {
         isPossibleStepsDisplay = value;
         diskColorWithDisplayedSteps = diskColor;
     }
 
+    /**
+     * Подсчитывает количество фишек заданного цвета на доске.
+     * @param diskColor цвет фишек.
+     * @return количество фишек заданного цвета.
+     */
     public int getDiskAmount(DiskColor diskColor) {
         int amount = 0;
         for (int i = 0; i < getSize(); ++i) {
@@ -303,6 +410,10 @@ public class Board {
         return amount;
     }
 
+    /**
+     * Возвращает строковое представление доски.
+     * @return строковое представление доски.
+     */
     @Override
     public String toString() {
         var possibleSteps = getAvailableSteps(diskColorWithDisplayedSteps);
@@ -335,6 +446,10 @@ public class Board {
         return out.toString();
     }
 
+    /**
+     * Метод копирующий доску.
+     * @return глубокая копия доски.
+     */
     public Board getBoardCopy() {
         Board boardCopy = new Board(getSize(), isStepBackAllowed);
         for (int i = 0; i < getSize(); ++i) {

@@ -1,3 +1,6 @@
+/**
+ * Класс-клетка доски.
+ */
 public class Cell {
     private final int positionX;
     private final int positionY;

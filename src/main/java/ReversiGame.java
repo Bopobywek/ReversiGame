@@ -14,6 +14,9 @@ public class ReversiGame {
         board.initialize();
     }
 
+    /**
+     * Цикл игры.
+     */
     public void run() {
         MenuAction menuAction = getMenuAction();
         while (menuAction != MenuAction.EXIT) {
@@ -29,12 +32,17 @@ public class ReversiGame {
                 update();
             }
             printFinalMessage();
+            updateBestScore();
             menuAction = getMenuAction();
             board = new Board(8, true);
             board.initialize();
         }
     }
 
+    /**
+     * Инициализирует игроков в зависимости от выбранного пользователем пункта в меню.
+     * @param menuAction выбранный пользователем пункт в меню.
+     */
     private void initialize(MenuAction menuAction) {
         player1 = new Player(new HumanBehaviour(), DiskColor.BLACK);
         currentPlayer = player1;
@@ -48,6 +56,9 @@ public class ReversiGame {
         }
     }
 
+    /**
+     * Ожидает ввода Enter.
+     */
     private void ReadEnter() {
         try {
             Scanner scanner = new Scanner(System.in);
@@ -56,8 +67,11 @@ public class ReversiGame {
         }
     }
 
+    /**
+     * Ход игры.
+     */
     private void update() {
-        board.setDisplayPossibleSteps(!currentPlayer.isBot(), currentPlayer.getDisk());
+        board.setDisplayPossibleSteps(!currentPlayer.isBot(), currentPlayer.getDiskColor());
 
         System.out.println(board);
         printScore();
@@ -65,7 +79,7 @@ public class ReversiGame {
             printMessageCenteredOnBoard("Bot makes a step now\n");
         }
 
-        if (board.getAvailableSteps(currentPlayer.getDisk()).isEmpty()) {
+        if (board.getAvailableSteps(currentPlayer.getDiskColor()).isEmpty()) {
             if (!currentPlayer.isBot()) {
                 System.out.println("Player " + (currentPlayer == player1 ? "1" : "2") + " skip a step," +
                         " because no steps available. Press enter to continue.");
@@ -75,13 +89,13 @@ public class ReversiGame {
         }
 
         Decision decision = new Decision(Action.SKIP);
-        while (decision.action != Action.STEP) {
+        while (decision.getAction() != Action.STEP) {
             if (!currentPlayer.isBot()) {
                 printStepMessage();
             }
 
             decision = currentPlayer.makeStep(board);
-            if (decision.action == Action.UNDO) {
+            if (decision.getAction() == Action.UNDO) {
                 board.restorePreviousStep();
                 board.restorePreviousStep();
 
@@ -93,6 +107,9 @@ public class ReversiGame {
         changeCurrentPlayer();
     }
 
+    /**
+     * Метод для смены игрока между ходами.
+     */
     private void changeCurrentPlayer() {
         if (currentPlayer == player1) {
             currentPlayer = player2;
@@ -101,12 +118,20 @@ public class ReversiGame {
         }
     }
 
+    /**
+     * Выводит на экран сообщение центрированное относительно игровой доски.
+     * @param message сообщение для вывода.
+     */
     private void printMessageCenteredOnBoard(String message) {
         int boardDisplaySize = 4 * board.getSize() + 1;
         int messageHalfLength = message.length() / 2;
         System.out.println(" ".repeat(boardDisplaySize / 2 - messageHalfLength + 3) + message);
     }
 
+    /**
+     * Проверяет, закончилась ли игра.
+     * @return {@code true}, если игра закончилась, {@code false} иначе.
+     */
     private boolean isGameFinished() {
         int blackScore = board.getDiskAmount(DiskColor.BLACK);
         int whiteScore = board.getDiskAmount(DiskColor.WHITE);
@@ -115,10 +140,16 @@ public class ReversiGame {
                 && board.getAvailableSteps(DiskColor.WHITE).isEmpty());
     }
 
+    /**
+     * Выводит сообщение перед шагом игрока.
+     */
     private void printStepMessage() {
         System.out.println("Now player " + (currentPlayer == player1 ? "1" : "2") + " is making a move");
     }
 
+    /**
+     * Выводит заключительное сообщение.
+     */
     private void printFinalMessage() {
         printMessageCenteredOnBoard("GAME OVER");
         System.out.println(board);
@@ -132,10 +163,11 @@ public class ReversiGame {
         } else {
             printMessageCenteredOnBoard("Draw: both players have the same score\n");
         }
-
-        updateBestScore();
     }
 
+    /**
+     * Обновляет лучший счёт игроков.
+     */
     private void updateBestScore() {
         if (!player1.isBot()) {
             bestScorePlayer1 = Math.max(bestScorePlayer1, board.getDiskAmount(DiskColor.BLACK));
@@ -146,12 +178,18 @@ public class ReversiGame {
         }
     }
 
+    /**
+     * Печатает текущий счёт.
+     */
     private void printScore() {
         int blackScore = board.getDiskAmount(DiskColor.BLACK);
         int whiteScore = board.getDiskAmount(DiskColor.WHITE);
         printMessageCenteredOnBoard("black: " + blackScore + " | white: " + whiteScore + "\n");
     }
 
+    /**
+     * Отображает лучший счёт игрока в рамках сессии.
+     */
     private void printBestScore() {
         if (bestScorePlayer1 < 0 && bestScorePlayer2 < 0) {
             System.out.println("There are no completed games yet, so there is no best score\n");
@@ -167,6 +205,10 @@ public class ReversiGame {
         }
     }
 
+    /**
+     * Запрашивает у пользователя выбор опции из меню.
+     * @return выбранная опция.
+     */
     private MenuAction getMenuAction() {
         System.out.println("""
                 Select an action to continue:
