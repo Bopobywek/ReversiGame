@@ -8,41 +8,55 @@ public class EasyBotBehaviour implements Behaviour {
             return new Decision(Action.SKIP);
         }
 
-        Hashtable<Cell, Double> costs = new Hashtable<>();
+        Hashtable<Cell, Double> rates = new Hashtable<>();
         for (Cell possibleStep : possibleSteps) {
-            if (getCellType(board, possibleStep) == CellType.CORNER) {
-                return new Decision(Action.STEP, possibleStep.getPositionX(), possibleStep.getPositionY());
-            }
-            double r = 0.0;
-            var closed = board.getClosedCells(possibleStep, diskColor);
-            for (Cell closedCell : closed) {
-                switch (getCellType(board, closedCell)) {
-                    case CORNER -> r += 0.8;
-                    case NEAR_WALL -> r += 0.4;
-                }
-            }
-            if (getCellType(board, possibleStep) == CellType.INTERNAL) {
-                r += 1;
-            } else {
-                r += 2;
-            }
 
-            costs.put(possibleStep, r);
+            double rate = getRate(board, possibleStep, diskColor);
+            if (rate >= 1) {
+                rates.put(possibleStep, rate);
+            }
         }
 
-        Cell bestStep = possibleSteps.get(0);
-        double maxCost = 0;
-        for (Cell possibleStep : possibleSteps) {
-            if (costs.get(possibleStep) > maxCost) {
-                bestStep = possibleStep;
-                maxCost = costs.get(possibleStep);
-            }
-        }
+        Cell bestStep = getCellWithMaxRate(rates);
+        bestStep = bestStep == null ? possibleSteps.get(0) : bestStep;
 
         return new Decision(Action.STEP, bestStep.getPositionX(), bestStep.getPositionY());
     }
 
-    private CellType getCellType(Board board, Cell cell) {
+    protected Cell getCellWithMaxRate(Hashtable<Cell, Double> rates) {
+        Cell bestStep = null;
+        double maxCost = 0;
+        var keys = rates.keys();
+        while (keys.hasMoreElements()) {
+            Cell possibleStep = keys.nextElement();
+            if (rates.get(possibleStep) > maxCost) {
+                bestStep = possibleStep;
+                maxCost = rates.get(possibleStep);
+            }
+        }
+
+        return bestStep;
+    }
+
+    protected double getRate(Board board, Cell cell, DiskColor diskColor) {
+        double rate = 0.0;
+        var closed = board.getClosedCells(cell, diskColor);
+        for (Cell closedCell : closed) {
+            if (getCellType(board, closedCell) == CellType.NEAR_WALL) {
+                rate += 2;
+            } else {
+                rate += 1;
+            }
+        }
+        if (getCellType(board, cell) == CellType.CORNER) {
+            rate += 0.8 ;
+        } else if (getCellType(board, cell) == CellType.NEAR_WALL) {
+            rate += 0.4;
+        }
+
+        return rate;
+    }
+    protected CellType getCellType(Board board, Cell cell) {
         if ((cell.getPositionX() == 0 || cell.getPositionX() == board.getSize() - 1)
                 && (cell.getPositionY() == 0 || cell.getPositionY() == board.getSize() - 1)) {
             return CellType.CORNER;

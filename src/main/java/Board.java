@@ -109,6 +109,9 @@ public class Board {
         return verticalRow;
     }
 
+    /**
+     *
+     */
     public void restorePreviousStep() {
         if (!isStepBackAllowed || stepsHistory.isEmpty()) {
             return;
@@ -330,5 +333,16 @@ public class Board {
         out.append('\n');
 
         return out.toString();
+    }
+
+    public Board getBoardCopy() {
+        Board boardCopy = new Board(getSize(), isStepBackAllowed);
+        for (int i = 0; i < getSize(); ++i) {
+            for (int j = 0; j < getSize(); ++j) {
+                boardCopy.getCell(j, i).setDisk(getCell(j, i).getDisk());
+            }
+        }
+
+        return boardCopy;
     }
 }

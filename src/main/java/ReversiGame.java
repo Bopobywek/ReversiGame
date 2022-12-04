@@ -30,6 +30,8 @@ public class ReversiGame {
             }
             printFinalMessage();
             menuAction = getMenuAction();
+            board = new Board(8, true);
+            board.initialize();
         }
     }
 
@@ -38,6 +40,8 @@ public class ReversiGame {
         currentPlayer = player1;
         if (menuAction == MenuAction.PLAY_EASY_BOT) {
             player2 = new Player(new EasyBotBehaviour(), DiskColor.WHITE);
+        } else if (menuAction == MenuAction.PLAY_HARD_BOT) {
+            player2 = new Player(new HardBotBehaviour(), DiskColor.WHITE);
         } else {
             player2 = new Player(new HumanBehaviour(), DiskColor.WHITE);
             board.setStepBackAllowed(false);
@@ -151,6 +155,9 @@ public class ReversiGame {
     private void printBestScore() {
         if (bestScorePlayer1 < 0 && bestScorePlayer2 < 0) {
             System.out.println("There are no completed games yet, so there is no best score\n");
+        } else if (bestScorePlayer1 < 0) {
+            System.out.println("Player 1 was only a bot, so the score is not determined\n"
+                    + "Best score for player 2: " + bestScorePlayer2 + "\n\n");
         } else if (bestScorePlayer2 < 0) {
             System.out.println("Best score for player 1: " + bestScorePlayer1 + "\nPlayer 2 was only a bot," +
                     " so the score is not determined\n");
@@ -164,9 +171,10 @@ public class ReversiGame {
         System.out.println("""
                 Select an action to continue:
                 1. Play with easy bot
-                2. Play with another person
-                3. Print best score
-                4. Exit from game
+                2. Play with hard bot
+                3. Play with another person
+                4. Print best score
+                5. Exit from game
                 Please, enter selected action.""");
 
         boolean isCorrectInput = false;
@@ -174,7 +182,7 @@ public class ReversiGame {
         do {
             System.out.print(">> ");
             Scanner scanner = new Scanner(System.in);
-            String pattern = "[1-4]";
+            String pattern = "[1-5]";
             try {
                 input = scanner.next(pattern);
                 isCorrectInput = true;
@@ -186,8 +194,10 @@ public class ReversiGame {
         if ("1".equals(input)) {
             return MenuAction.PLAY_EASY_BOT;
         } else if ("2".equals(input)) {
-            return MenuAction.PLAY_HUMAN;
+            return MenuAction.PLAY_HARD_BOT;
         } else if ("3".equals(input)){
+            return MenuAction.PLAY_HUMAN;
+        } else if ("4".equals(input)){
             return MenuAction.PRINT_BEST_SCORE;
         } else {
             return MenuAction.EXIT;
