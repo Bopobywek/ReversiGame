@@ -1,4 +1,5 @@
 public enum Action {
-    Step,
-    Skip
+    STEP,
+    SKIP,
+    UNDO
 }

@@ -1,5 +1,5 @@
 public enum CellType {
-    Corner,
-    NearWall,
-    Internal
+    CORNER,
+    NEAR_WALL,
+    INTERNAL
 }

@@ -1,3 +1,3 @@
 public interface Behaviour {
-    Decision makeDecision(Board board, Disk disk);
+    Decision makeDecision(Board board, DiskColor diskColor);
 }

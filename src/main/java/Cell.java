@@ -2,20 +2,20 @@ public class Cell {
     private final int positionX;
     private final int positionY;
 
-    private Disk disk;
+    private DiskColor diskColor;
 
-    public Cell(int posX, int posY, Disk disk) {
+    public Cell(int posX, int posY, DiskColor diskColor) {
         positionX = posX;
         positionY = posY;
-        this.disk = disk;
+        this.diskColor = diskColor;
     }
 
-    public void setDisk(Disk disk) {
-        this.disk = disk;
+    public void setDisk(DiskColor diskColor) {
+        this.diskColor = diskColor;
     }
 
-    public Disk getDisk() {
-        return disk;
+    public DiskColor getDisk() {
+        return diskColor;
     }
 
     public int getPositionX() {

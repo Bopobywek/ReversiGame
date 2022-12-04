@@ -1,42 +1,48 @@
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Stack;
-import java.util.function.Function;
 
 public class Board {
     private ArrayList<ArrayList<Cell>> board;
     private Stack<BoardSnapshot> stepsHistory = new Stack<>();
     private final int size;
     private boolean isPossibleStepsDisplay = false;
-    private Disk diskWithDisplayedSteps = Disk.None;
 
-    public Board(int size) {
+    public boolean isRestoreAllowed() {
+        return isStepBackAllowed;
+    }
+
+    private boolean isStepBackAllowed;
+    private DiskColor diskColorWithDisplayedSteps = DiskColor.NONE;
+
+    public Board(int size, boolean isStepBackAllowed) {
+        this.isStepBackAllowed = isStepBackAllowed;
         board = new ArrayList<>();
         this.size = size;
         for (int i = 0; i < size; ++i) {
             ArrayList<Cell> row = new ArrayList<>(size);
             for (int j = 0; j < size; ++j) {
-                row.add(new Cell(j, i, Disk.None));
+                row.add(new Cell(j, i, DiskColor.NONE));
             }
             board.add(row);
         }
     }
 
     void initialize() {
-        getCell(size / 2, size / 2).setDisk(Disk.White);
-        getCell(size / 2, size / 2 - 1).setDisk(Disk.Black);
-        getCell(size / 2 - 1, size / 2).setDisk(Disk.Black);
-        getCell(size / 2 - 1, size / 2 - 1).setDisk(Disk.White);
+        getCell(size / 2, size / 2).setDisk(DiskColor.WHITE);
+        getCell(size / 2, size / 2 - 1).setDisk(DiskColor.BLACK);
+        getCell(size / 2 - 1, size / 2).setDisk(DiskColor.BLACK);
+        getCell(size / 2 - 1, size / 2 - 1).setDisk(DiskColor.WHITE);
     }
 
     public int getSize() {
         return size;
     }
 
-    public void makeStep(int x, int y, Disk disk) {
+    public void makeStep(int x, int y, DiskColor diskColor) {
         makeSnapshot();
-        getCell(x, y).setDisk(disk);
-        update(getCell(x, y), disk);
+        getCell(x, y).setDisk(diskColor);
+        update(getCell(x, y), diskColor);
     }
 
     private void makeSnapshot() {
@@ -46,7 +52,7 @@ public class Board {
             for (int j = 0; j < size; ++j) {
                 row.add(new Cell(j, i, getCell(j, i).getDisk()));
             }
-            board.add(row);
+            snapshot.add(row);
         }
         stepsHistory.add(new BoardSnapshot(snapshot));
     }
@@ -55,13 +61,13 @@ public class Board {
         return board.get(y).get(x);
     }
 
-    public int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, Disk disk) {
+    public int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, DiskColor diskColor) {
         int position = diskPosition - 1;
         while (position >= 0) {
-            Disk disk1 = row.get(position).getDisk();
-            if (disk == disk1 && diskPosition - position > 1) {
+            DiskColor diskColor1 = row.get(position).getDisk();
+            if (diskColor == diskColor1 && diskPosition - position > 1) {
                 return position;
-            } else if (disk1 == Disk.None || (disk == disk1 && diskPosition - position <= 1)) {
+            } else if (diskColor1 == DiskColor.NONE || (diskColor == diskColor1 && diskPosition - position <= 1)) {
                 break;
             } else {
                 position -= 1;
@@ -71,10 +77,10 @@ public class Board {
         int rowSize = row.size();
         position = diskPosition + 1;
         while (position < rowSize) {
-            Disk disk1 = row.get(position).getDisk();
-            if (disk == disk1 && position - diskPosition > 1) {
+            DiskColor diskColor1 = row.get(position).getDisk();
+            if (diskColor == diskColor1 && position - diskPosition > 1) {
                 return position;
-            } else if (disk1 == Disk.None || (disk == disk1 && position - diskPosition <= 1)) {
+            } else if (diskColor1 == DiskColor.NONE || (diskColor == diskColor1 && position - diskPosition <= 1)) {
                 break;
             } else {
                 position += 1;
@@ -95,6 +101,19 @@ public class Board {
         }
 
         return verticalRow;
+    }
+
+    public void restorePreviousStep() {
+        if (!isStepBackAllowed || stepsHistory.isEmpty()) {
+            return;
+        }
+
+        var snapshot = stepsHistory.pop();
+        for (int i = 0; i < size; ++i) {
+            for (int j = 0; j < size; ++j) {
+                getCell(j, i).setDisk(snapshot.board.get(i).get(j).getDisk());
+            }
+        }
     }
 
     public ArrayList<Cell> getDiagonalRow(int x, int y) {
@@ -141,7 +160,7 @@ public class Board {
         return diagonalRow;
     }
 
-    public ArrayList<Cell> getClosedCells(Cell cell, Disk disk) {
+    public ArrayList<Cell> getClosedCells(Cell cell, DiskColor diskColor) {
         ArrayList<Cell> closedCells = new ArrayList<>();
         ArrayList<Cell> horizontalRow = getHorizontalRow(cell.getPositionY());
         int horizontalIndex = cell.getPositionX();
@@ -155,18 +174,18 @@ public class Board {
         ArrayList<Cell> sideDiagonalRow = getSideDiagonalRow(cell.getPositionX(), cell.getPositionY());
         int sideDiagonalIndex = getIndexInRow(sideDiagonalRow, cell);
 
-        closedCells.addAll(getClosedCellsInRow(horizontalRow, horizontalIndex, disk));
-        closedCells.addAll(getClosedCellsInRow(verticalRow, verticalIndex, disk));
-        closedCells.addAll(getClosedCellsInRow(diagonalRow, diagonalIndex, disk));
-        closedCells.addAll(getClosedCellsInRow(sideDiagonalRow, sideDiagonalIndex, disk));
+        closedCells.addAll(getClosedCellsInRow(horizontalRow, horizontalIndex, diskColor));
+        closedCells.addAll(getClosedCellsInRow(verticalRow, verticalIndex, diskColor));
+        closedCells.addAll(getClosedCellsInRow(diagonalRow, diagonalIndex, diskColor));
+        closedCells.addAll(getClosedCellsInRow(sideDiagonalRow, sideDiagonalIndex, diskColor));
 
 
         return closedCells;
     }
 
-    private ArrayList<Cell> getClosedCellsInRow(ArrayList<Cell> row, int index, Disk disk) {
+    private ArrayList<Cell> getClosedCellsInRow(ArrayList<Cell> row, int index, DiskColor diskColor) {
         ArrayList<Cell> closedCells = new ArrayList<>();
-        int closingCellIndex = getClosingCellIndex(row, index, disk);
+        int closingCellIndex = getClosingCellIndex(row, index, diskColor);
         if (closingCellIndex < 0) {
             return closedCells;
         }
@@ -193,7 +212,7 @@ public class Board {
         return -1;
     }
 
-    private boolean isPossibleStep(Cell cell, Disk disk) {
+    private boolean isPossibleStep(Cell cell, DiskColor diskColor) {
         ArrayList<Cell> horizontalRow = getHorizontalRow(cell.getPositionY());
         int horizontalIndex = cell.getPositionX();
 
@@ -206,25 +225,25 @@ public class Board {
         ArrayList<Cell> sideDiagonalRow = getSideDiagonalRow(cell.getPositionX(), cell.getPositionY());
         int sideDiagonalIndex = getIndexInRow(sideDiagonalRow, cell);
 
-        return getClosingCellIndex(horizontalRow, horizontalIndex, disk) != -1
-                || getClosingCellIndex(verticalRow, verticalIndex, disk) != -1
-                || getClosingCellIndex(diagonalRow, diagonalIndex, disk) != -1
-                || getClosingCellIndex(sideDiagonalRow, sideDiagonalIndex, disk) != -1;
+        return getClosingCellIndex(horizontalRow, horizontalIndex, diskColor) != -1
+                || getClosingCellIndex(verticalRow, verticalIndex, diskColor) != -1
+                || getClosingCellIndex(diagonalRow, diagonalIndex, diskColor) != -1
+                || getClosingCellIndex(sideDiagonalRow, sideDiagonalIndex, diskColor) != -1;
     }
 
-    public ArrayList<Cell> getAvailableSteps(Disk disk) {
+    public ArrayList<Cell> getAvailableSteps(DiskColor diskColor) {
         ArrayList<Cell> available = new ArrayList<>();
-        if (disk == Disk.None) {
+        if (diskColor == DiskColor.NONE) {
             return available;
         }
 
         for (int i = 0; i < size; ++i) {
             for (int j = 0; j < size; ++j) {
-                if (getCell(j, i).getDisk() != Disk.None) {
+                if (getCell(j, i).getDisk() != DiskColor.NONE) {
                     continue;
                 }
                 var cell = getCell(j, i);
-                if (isPossibleStep(cell, disk)) {
+                if (isPossibleStep(cell, diskColor)) {
                     available.add(cell);
                 }
             }
@@ -233,7 +252,7 @@ public class Board {
         return available;
     }
 
-    private void updateRow(ArrayList<Cell> row, int diskPosition, Disk last) {
+    private void updateRow(ArrayList<Cell> row, int diskPosition, DiskColor last) {
         int closingCellIndex = getClosingCellIndex(row, diskPosition, last);
         if (closingCellIndex < 0) {
             return;
@@ -248,7 +267,7 @@ public class Board {
         }
     }
 
-    private void update(Cell cell, Disk last) {
+    private void update(Cell cell, DiskColor last) {
         updateRow(getHorizontalRow(cell.getPositionY()), cell.getPositionX(), last);
         updateRow(getVerticalRow(cell.getPositionX()), cell.getPositionY(), last);
         var diagonalRow = getDiagonalRow(cell.getPositionX(), cell.getPositionY());
@@ -257,14 +276,27 @@ public class Board {
         updateRow(sideDiagonalRow, getIndexInRow(sideDiagonalRow, cell), last);
     }
 
-    public void displayPossibleSteps(boolean value, Disk disk) {
+    public void displayPossibleSteps(boolean value, DiskColor diskColor) {
         isPossibleStepsDisplay = value;
-        diskWithDisplayedSteps = disk;
+        diskColorWithDisplayedSteps = diskColor;
+    }
+
+    public int getDiskAmount(DiskColor diskColor) {
+        int amount = 0;
+        for (int i = 0; i < getSize(); ++i) {
+            for (int j = 0; j < getSize(); ++j) {
+                if (getCell(j, i).getDisk() == diskColor) {
+                    ++amount;
+                }
+            }
+        }
+
+        return amount;
     }
 
     @Override
     public String toString() {
-        var possibleSteps = getAvailableSteps(diskWithDisplayedSteps);
+        var possibleSteps = getAvailableSteps(diskColorWithDisplayedSteps);
         var out = new StringBuilder();
         out.append("  ");
         out.append("|").append("-".repeat(Math.max(0, size * 4 - 1))).append("|\n");
@@ -275,9 +307,9 @@ public class Board {
                     out.append(" @ ");
                 } else {
                     switch (getCell(j, i).getDisk()) {
-                        case White -> out.append(" W ");
-                        case Black -> out.append(" B ");
-                        case None -> out.append("   ");
+                        case WHITE -> out.append(" W ");
+                        case BLACK -> out.append(" B ");
+                        case NONE -> out.append("   ");
                     }
                 }
                 out.append('|');

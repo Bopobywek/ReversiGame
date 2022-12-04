@@ -1,24 +1,26 @@
 public class Player {
     private Behaviour behaviour;
-    private Disk disk;
+    private DiskColor diskColor;
 
-    Player(Behaviour behaviour, Disk disk) {
+    Player(Behaviour behaviour, DiskColor diskColor) {
         this.behaviour = behaviour;
-        this.disk = disk;
+        this.diskColor = diskColor;
     }
 
-    void makeStep(Board board) {
-        Decision decision = behaviour.makeDecision(board, disk);
-        if (decision.action == Action.Step) {
-            board.makeStep(decision.coordinateX, decision.coordinateY, disk);
+    Decision makeStep(Board board) {
+        Decision decision = behaviour.makeDecision(board, diskColor);
+        if (decision.action == Action.STEP) {
+            board.makeStep(decision.coordinateX, decision.coordinateY, diskColor);
         }
+
+        return decision;
     }
 
     public boolean isBot() {
         return !(behaviour instanceof HumanBehaviour);
     }
 
-    public Disk getDisk() {
-        return disk;
+    public DiskColor getDisk() {
+        return diskColor;
     }
 }
