@@ -53,9 +53,7 @@ public class ReversiGame {
     }
 
     private void update() {
-        board.displayPossibleSteps(!currentPlayer.isBot(), currentPlayer.getDisk());
-
-
+        board.setDisplayPossibleSteps(!currentPlayer.isBot(), currentPlayer.getDisk());
 
         System.out.println(board);
         printScore();
@@ -141,7 +139,6 @@ public class ReversiGame {
 
         if (!player2.isBot()) {
             bestScorePlayer2 = Math.max(bestScorePlayer2, board.getDiskAmount(DiskColor.WHITE));
-
         }
     }
 
@@ -153,7 +150,7 @@ public class ReversiGame {
 
     private void printBestScore() {
         if (bestScorePlayer1 < 0 && bestScorePlayer2 < 0) {
-            System.out.println("No games have been completed yet");
+            System.out.println("There are no completed games yet, so there is no best score\n");
         } else if (bestScorePlayer2 < 0) {
             System.out.println("Best score for player 1: " + bestScorePlayer1 + "\nPlayer 2 was only a bot," +
                     " so the score is not determined\n");
@@ -168,8 +165,8 @@ public class ReversiGame {
                 Select an action to continue:
                 1. Play with easy bot
                 2. Play with another person
-                2. Print best score
-                3. Exit from game
+                3. Print best score
+                4. Exit from game
                 Please, enter selected action.""");
 
         boolean isCorrectInput = false;
@@ -177,7 +174,7 @@ public class ReversiGame {
         do {
             System.out.print(">> ");
             Scanner scanner = new Scanner(System.in);
-            String pattern = "[1-3]";
+            String pattern = "[1-4]";
             try {
                 input = scanner.next(pattern);
                 isCorrectInput = true;

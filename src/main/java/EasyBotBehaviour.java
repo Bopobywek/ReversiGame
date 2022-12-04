@@ -7,6 +7,7 @@ public class EasyBotBehaviour implements Behaviour {
         if (possibleSteps.isEmpty()) {
             return new Decision(Action.SKIP);
         }
+
         Hashtable<Cell, Double> costs = new Hashtable<>();
         for (Cell possibleStep : possibleSteps) {
             if (getCellType(board, possibleStep) == CellType.CORNER) {

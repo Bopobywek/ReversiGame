@@ -34,7 +34,7 @@ public class Board {
         }
     }
 
-    void initialize() {
+    public void initialize() {
         getCell(size / 2, size / 2).setDisk(DiskColor.WHITE);
         getCell(size / 2, size / 2 - 1).setDisk(DiskColor.BLACK);
         getCell(size / 2 - 1, size / 2).setDisk(DiskColor.BLACK);
@@ -67,7 +67,7 @@ public class Board {
         return board.get(y).get(x);
     }
 
-    public int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, DiskColor diskColor) {
+    private int getClosingCellIndex(ArrayList<Cell> row, int diskPosition, DiskColor diskColor) {
         int position = diskPosition - 1;
         while (position >= 0) {
             DiskColor diskColor1 = row.get(position).getDisk();
@@ -96,11 +96,11 @@ public class Board {
         return -1;
     }
 
-    public ArrayList<Cell> getHorizontalRow(int index) {
+    private ArrayList<Cell> getHorizontalRow(int index) {
         return board.get(index);
     }
 
-    public ArrayList<Cell> getVerticalRow(int index) {
+    private ArrayList<Cell> getVerticalRow(int index) {
         ArrayList<Cell> verticalRow = new ArrayList<>();
         for (int i = 0; i < size; ++i) {
             verticalRow.add(getCell(index, i));
@@ -122,7 +122,7 @@ public class Board {
         }
     }
 
-    public ArrayList<Cell> getDiagonalRow(int x, int y) {
+    private ArrayList<Cell> getDiagonalRow(int x, int y) {
         ArrayList<Cell> diagonalRow = new ArrayList<>();
         int startX = x - 1;
         int startY = y - 1;
@@ -144,7 +144,7 @@ public class Board {
         return diagonalRow;
     }
 
-    public ArrayList<Cell> getSideDiagonalRow(int x, int y) {
+    private ArrayList<Cell> getSideDiagonalRow(int x, int y) {
         int startX = x;
         int startY = y;
         ArrayList<Cell> diagonalRow = new ArrayList<>();
@@ -206,7 +206,7 @@ public class Board {
         return closedCells;
     }
 
-    public int getIndexInRow(ArrayList<Cell> row, Cell cell) {
+    private int getIndexInRow(ArrayList<Cell> row, Cell cell) {
         int i = 0;
         for (Cell cell1: row) {
             if (cell1.getPositionX() == cell.getPositionX() && cell1.getPositionY() == cell.getPositionY()) {
@@ -282,7 +282,7 @@ public class Board {
         updateRow(sideDiagonalRow, getIndexInRow(sideDiagonalRow, cell), last);
     }
 
-    public void displayPossibleSteps(boolean value, DiskColor diskColor) {
+    public void setDisplayPossibleSteps(boolean value, DiskColor diskColor) {
         isPossibleStepsDisplay = value;
         diskColorWithDisplayedSteps = diskColor;
     }
