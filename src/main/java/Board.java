@@ -7,9 +7,14 @@ public class Board {
     private Stack<BoardSnapshot> stepsHistory = new Stack<>();
     private final int size;
     private boolean isPossibleStepsDisplay = false;
+    public final int displaySize;
 
     public boolean isRestoreAllowed() {
         return isStepBackAllowed;
+    }
+
+    public void setStepBackAllowed(boolean stepBackAllowed) {
+        isStepBackAllowed = stepBackAllowed;
     }
 
     private boolean isStepBackAllowed;
@@ -19,6 +24,7 @@ public class Board {
         this.isStepBackAllowed = isStepBackAllowed;
         board = new ArrayList<>();
         this.size = size;
+        displaySize = size * 4 - 1;
         for (int i = 0; i < size; ++i) {
             ArrayList<Cell> row = new ArrayList<>(size);
             for (int j = 0; j < size; ++j) {

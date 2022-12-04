@@ -17,7 +17,13 @@ public class HumanBehaviour implements Behaviour {
         int y = 0;
         do {
             printAvailableSteps(possibleSteps);
-            System.out.println("To undo a step enter \"R\". To specify the cell in which you want to put the disk enter cell coordinates. Example: 5H.");
+            if (board.isRestoreAllowed()) {
+                System.out.println("To undo a step enter \"R\". To specify the cell," +
+                        " in which you want to put the disk, enter cell coordinates. Example: 5H.");
+            }
+            else {
+                System.out.println("Specify the cell in which you want to put the disk. Example: 5H.");
+            }
             System.out.print(">> ");
             String input;
             Scanner scanner = new Scanner(System.in);
@@ -27,6 +33,9 @@ public class HumanBehaviour implements Behaviour {
                 input = scanner.next(pattern).toLowerCase();
             } catch (NoSuchElementException ex) {
                 System.out.println("The cell was entered in the wrong format. Try again.");
+                continue;
+            } catch (IllegalStateException ex) {
+                System.out.println("Something goes wrong. Please, try again.");
                 continue;
             }
 
